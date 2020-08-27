@@ -19,7 +19,6 @@
 /* USER CODE END Header */
 /* Includes ------------------------------------------------------------------*/
 #include "main.h"
-#include "adc.h"
 #include "dma.h"
 #include "i2c.h"
 #include "usart.h"
@@ -58,10 +57,7 @@ void SystemClock_Config(void);
 
 /* Private user code ---------------------------------------------------------*/
 /* USER CODE BEGIN 0 */
-extern DMA_HandleTypeDef hdma_usart1_rx;
-extern DMA_HandleTypeDef hdma_usart1_tx;
-extern DMA_HandleTypeDef hdma_usart2_rx;
-extern DMA_HandleTypeDef hdma_usart2_tx;
+
 /* USER CODE END 0 */
 
 /**
@@ -71,11 +67,7 @@ extern DMA_HandleTypeDef hdma_usart2_tx;
 int main(void)
 {
   /* USER CODE BEGIN 1 */
-	// 发送测试字符串
-	uint8_t str[] = "\r\n-------------USART_DMA_Sending------------------\r\n";
-	// 接收缓存区大小为20
-	uint8_t recvStr1[20] = {0x65,0x65,0x65,0x65,0x65,0x65,0x65,0x65,0x65,0x65,0x65,0x65,0x65,0x65,0x65,0x65,0x65,0x65,0x65,0x65};
-	uint8_t recvStr2[20] = {0x66,0x66,0x66,0x66,0x66,0x66,0x66,0x66,0x66,0x66,0x66,0x66,0x66,0x66,0x66,0x66,0x66,0x66,0x66,0x66};
+
   /* USER CODE END 1 */
 
   /* MCU Configuration--------------------------------------------------------*/
@@ -97,18 +89,11 @@ int main(void)
   /* Initialize all configured peripherals */
   MX_GPIO_Init();
   MX_DMA_Init();
-  MX_ADC1_Init();
-  MX_I2C1_Init();
-  MX_USART1_UART_Init();
   MX_USART2_UART_Init();
+  MX_USART3_UART_Init();
+  MX_I2C1_Init();
   /* USER CODE BEGIN 2 */
-	HAL_UART_Transmit_DMA(&huart1, str, sizeof(str) - 1); 
-  HAL_Delay(1000);
-	HAL_UART_Receive_DMA(&huart1, (uint8_t *)recvStr1, 20);
-	HAL_Delay(1000);
-	HAL_UART_Transmit_DMA(&huart2, str, sizeof(str) - 1); 
-  HAL_Delay(1000);
-	HAL_UART_Receive_DMA(&huart2, (uint8_t *)recvStr2, 20);
+
   /* USER CODE END 2 */
 
   /* Infinite loop */
@@ -118,44 +103,6 @@ int main(void)
     /* USER CODE END WHILE */
 
     /* USER CODE BEGIN 3 */
-		while (1)
-  {
-    /* USER CODE END WHILE */
-
-    /* USER CODE BEGIN 3 */
-		//循环等待hdma_usart3_rx.State状态的变换，当接收到20个字符的大小后，DMA传输结束
-	  //注：因我们采用的是正常模式，而非循环模式，所以才会这么使用，循环模式下，该标志位貌似不起作用
-		//串口1接收
-		if(hdma_usart1_rx.State == HAL_DMA_STATE_READY)
-		{
-			// 将接收到的字符打印出来进行观察
-//			HAL_UART_Transmit_DMA(&huart1, recvStr1, sizeof(recvStr1) - 1);
-			// 发到串口2
-//			HAL_UART_Transmit_DMA(&huart2, recvStr1, sizeof(recvStr1) - 1);
-//			HAL_Delay(1000);
-//			// 清除缓存区内容，方便进行下次接收
-////			memset(recvStr1,0,sizeof(recvStr1));
-//			// 软件将标志位清零
-//			hdma_usart1_rx.State = HAL_DMA_STATE_BUSY;
-//			// 继续继续下一回合的DMA接收，因为采用的非循环模式，再次调用会再次使能DMA
-//			HAL_UART_Receive_DMA(&huart1, (uint8_t *)recvStr1, 20);
-		}
-		//串口2接收
-		if(hdma_usart2_rx.State == HAL_DMA_STATE_READY)
-		{
-			// 将接收到的字符打印出来进行观察
-			// 发到串口1
-			HAL_UART_Transmit_DMA(&huart1, recvStr1, sizeof(recvStr1) - 1);
-			HAL_Delay(1000);
-			// 清除缓存区内容，方便进行下次接收
-//			memset(recvStr2,0,sizeof(recvStr2));
-			// 软件将标志位清零
-			hdma_usart2_rx.State = HAL_DMA_STATE_BUSY;
-			// 继续继续下一回合的DMA接收，因为采用的非循环模式，再次调用会再次使能DMA
-			HAL_UART_Receive_DMA(&huart2, (uint8_t *)recvStr2, 20);
-		}
-		
-  }
   }
   /* USER CODE END 3 */
 }
@@ -168,7 +115,6 @@ void SystemClock_Config(void)
 {
   RCC_OscInitTypeDef RCC_OscInitStruct = {0};
   RCC_ClkInitTypeDef RCC_ClkInitStruct = {0};
-  RCC_PeriphCLKInitTypeDef PeriphClkInit = {0};
 
   /** Initializes the RCC Oscillators according to the specified parameters
   * in the RCC_OscInitTypeDef structure.
@@ -194,12 +140,6 @@ void SystemClock_Config(void)
   RCC_ClkInitStruct.APB2CLKDivider = RCC_HCLK_DIV1;
 
   if (HAL_RCC_ClockConfig(&RCC_ClkInitStruct, FLASH_LATENCY_2) != HAL_OK)
-  {
-    Error_Handler();
-  }
-  PeriphClkInit.PeriphClockSelection = RCC_PERIPHCLK_ADC;
-  PeriphClkInit.AdcClockSelection = RCC_ADCPCLK2_DIV8;
-  if (HAL_RCCEx_PeriphCLKConfig(&PeriphClkInit) != HAL_OK)
   {
     Error_Handler();
   }
