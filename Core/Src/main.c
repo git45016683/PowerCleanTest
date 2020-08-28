@@ -81,6 +81,7 @@ extern DMA_HandleTypeDef hdma_usart1_rx;
 extern DMA_HandleTypeDef hdma_usart1_tx;
 extern DMA_HandleTypeDef hdma_usart2_rx;
 extern DMA_HandleTypeDef hdma_usart2_tx;
+uint8_t uart2recv[21] = {0x00};
 /* USER CODE END 0 */
 
 /**
@@ -161,9 +162,15 @@ int main(void)
 //		}
 		HAL_Delay(5000);
 		static uint8_t sendCount[21] = {0x41,0x41,0x41,0x41,0x41,0x41,0x41,0x41,0x41,0x41,0x41,0x41,0x41,0x41,0x41,0x41,0x41,0x41,0x41,0x41};
-		HAL_UART_Transmit_DMA(&huart2, sendCount, sizeof(sendCount)-1);
 		sendCount[18] += 0x01;
 		if (sendCount[18] - sendCount[1] > 20) {sendCount[18] = 0x41;}
+		uart2recv[18] = sendCount[18];
+		if (uart2recv[6] == 0x41) {
+			HAL_UART_Transmit_DMA(&huart2, uart2recv, sizeof(uart2recv)-1);
+		} else {
+			HAL_UART_Transmit_DMA(&huart2, sendCount, sizeof(sendCount)-1);
+		}
+		
 //		//´®¿Ú2½ÓÊÕ
 //		if(hdma_usart2_rx.State == HAL_DMA_STATE_READY)
 //		{

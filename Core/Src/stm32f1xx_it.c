@@ -294,13 +294,15 @@ void USART2_IRQHandler(void)
   {
     __HAL_UART_CLEAR_IDLEFLAG(&huart2);
     static uint8_t recv[21] = {0x00};
-		printf("\r\nuart2recv: %s", recv);
-//		uint8_t head[] = "\r\nrecv: ";
-//		uint8_t end[] = " .\r\n";
-//		HAL_UART_Transmit_DMA(&huart1, head, sizeof(head) - 1); 
-//		HAL_UART_Transmit_DMA(&huart1, recv, sizeof(recv) - 1); 
-//		HAL_UART_Transmit_DMA(&huart1, end, sizeof(end) - 1); 
-//		memset(recv, 0x00, sizeof(recv));
+		if(recv[2] == 0x41)
+		{
+//			printf("\r\nrecv: %s", recv);
+			printf("\r\nrecv: ");
+			for(int i=0; i<20; i++){printf("0x%02x ", recv[i]);}
+			printf(".\r\n");
+			memcpy(uart2recv, recv, 21);
+			memset(recv, 0x00, 21);
+		}
 		HAL_UART_Receive_DMA(&huart2, recv, 21); 
 		
   }
