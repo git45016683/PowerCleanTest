@@ -27,7 +27,7 @@
 
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
-
+#include <stdio.h>
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -53,7 +53,26 @@
 /* Private function prototypes -----------------------------------------------*/
 void SystemClock_Config(void);
 /* USER CODE BEGIN PFP */
+#ifdef __GNUC__
+/* With GCC/RAISONANCE, small printf (option LD Linker->Libraries->Small printf
+   set to 'Yes') calls __io_putchar() */
+#define PUTCHAR_PROTOTYPE int __io_putchar(int ch)
+#else
+#define PUTCHAR_PROTOTYPE int fputc(int ch, FILE *f)
+#endif /* __GNUC__ */
+/**
+  * @brief  Retargets the C library printf function to the USART.
+  * @param  None
+  * @retval None
+  */
+PUTCHAR_PROTOTYPE
+{
+  /* Place your implementation of fputc here */
+  /* e.g. write a character to the USART4 and Loop until the end of transmission */
+  HAL_UART_Transmit(&huart1, (uint8_t *)&ch, 1,0xFFFF);
 
+  return ch;
+}
 /* USER CODE END PFP */
 
 /* Private user code ---------------------------------------------------------*/
@@ -75,7 +94,7 @@ int main(void)
 	uint8_t str[] = "\r\n-------------USART_DMA_Sending------------------\r\n";
 	// 接收缓存区大小为20
 	uint8_t recvStr1[20] = {0x65,0x65,0x65,0x65,0x65,0x65,0x65,0x65,0x65,0x65,0x65,0x65,0x65,0x65,0x65,0x65,0x65,0x65,0x65,0x65};
-	uint8_t recvStr2[20] = {0x66,0x66,0x66,0x66,0x66,0x66,0x66,0x66,0x66,0x66,0x66,0x66,0x66,0x66,0x66,0x66,0x66,0x66,0x66,0x66};
+	uint8_t recvStr2[20] = {0x00};
   /* USER CODE END 1 */
 
   /* MCU Configuration--------------------------------------------------------*/
@@ -102,10 +121,12 @@ int main(void)
   MX_USART1_UART_Init();
   MX_USART2_UART_Init();
   /* USER CODE BEGIN 2 */
+//	__HAL_UART_ENABLE_IT(&huart1, UART_IT_IDLE);
 	HAL_UART_Transmit_DMA(&huart1, str, sizeof(str) - 1); 
   HAL_Delay(1000);
 	HAL_UART_Receive_DMA(&huart1, (uint8_t *)recvStr1, 20);
 	HAL_Delay(1000);
+	__HAL_UART_ENABLE_IT(&huart2, UART_IT_IDLE);
 	HAL_UART_Transmit_DMA(&huart2, str, sizeof(str) - 1); 
   HAL_Delay(1000);
 	HAL_UART_Receive_DMA(&huart2, (uint8_t *)recvStr2, 20);
@@ -118,44 +139,45 @@ int main(void)
     /* USER CODE END WHILE */
 
     /* USER CODE BEGIN 3 */
-		while (1)
-  {
-    /* USER CODE END WHILE */
-
-    /* USER CODE BEGIN 3 */
 		//循环等待hdma_usart3_rx.State状态的变换，当接收到20个字符的大小后，DMA传输结束
 	  //注：因我们采用的是正常模式，而非循环模式，所以才会这么使用，循环模式下，该标志位貌似不起作用
 		//串口1接收
-		if(hdma_usart1_rx.State == HAL_DMA_STATE_READY)
-		{
-			// 将接收到的字符打印出来进行观察
-//			HAL_UART_Transmit_DMA(&huart1, recvStr1, sizeof(recvStr1) - 1);
-			// 发到串口2
-			HAL_UART_Transmit_DMA(&huart2, recvStr1, sizeof(recvStr1) - 1);
-			HAL_Delay(1000);
-			// 清除缓存区内容，方便进行下次接收
+//		if(hdma_usart1_rx.State == HAL_DMA_STATE_READY)
+//		{
+//			// 将接收到的字符打印出来进行观察
+//			printf("\r\n:%s:",recvStr1);
+////			HAL_UART_Transmit_DMA(&huart1, recvStr1, sizeof(recvStr1) - 1);
+//			// 发到串口2
+//			HAL_UART_Transmit_DMA(&huart2, recvStr1, sizeof(recvStr1) - 1);
+//			HAL_Delay(1000);
+//			// 清除缓存区内容，方便进行下次接收
 //			memset(recvStr1,0,sizeof(recvStr1));
-			// 软件将标志位清零
-			hdma_usart1_rx.State = HAL_DMA_STATE_BUSY;
-			// 继续继续下一回合的DMA接收，因为采用的非循环模式，再次调用会再次使能DMA
-			HAL_UART_Receive_DMA(&huart1, (uint8_t *)recvStr1, 20);
-		}
-		//串口2接收
-		if(hdma_usart2_rx.State == HAL_DMA_STATE_READY)
-		{
-			// 将接收到的字符打印出来进行观察
-			// 发到串口1
-			HAL_UART_Transmit_DMA(&huart1, recvStr1, sizeof(recvStr1) - 1);
-			HAL_Delay(1000);
-			// 清除缓存区内容，方便进行下次接收
+//			// 软件将标志位清零
+//			hdma_usart1_rx.State = HAL_DMA_STATE_BUSY;
+//			// 继续继续下一回合的DMA接收，因为采用的非循环模式，再次调用会再次使能DMA
+//			HAL_UART_Receive_DMA(&huart1, (uint8_t *)recvStr1, 20);
+//			
+//			
+//		}
+		HAL_Delay(5000);
+		static uint8_t sendCount[21] = {0x41,0x41,0x41,0x41,0x41,0x41,0x41,0x41,0x41,0x41,0x41,0x41,0x41,0x41,0x41,0x41,0x41,0x41,0x41,0x41};
+		HAL_UART_Transmit_DMA(&huart2, sendCount, sizeof(sendCount)-1);
+		sendCount[18] += 0x01;
+		if (sendCount[18] - sendCount[1] > 20) {sendCount[18] = 0x41;}
+//		//串口2接收
+//		if(hdma_usart2_rx.State == HAL_DMA_STATE_READY)
+//		{
+//			// 将接收到的字符打印出来进行观察
+//			// 发到串口1
+//			HAL_UART_Transmit_DMA(&huart1, recvStr2, sizeof(recvStr2) - 1);
+//			HAL_Delay(1000);
+//			// 清除缓存区内容，方便进行下次接收
 //			memset(recvStr2,0,sizeof(recvStr2));
-			// 软件将标志位清零
-			hdma_usart2_rx.State = HAL_DMA_STATE_BUSY;
-			// 继续继续下一回合的DMA接收，因为采用的非循环模式，再次调用会再次使能DMA
-			HAL_UART_Receive_DMA(&huart2, (uint8_t *)recvStr2, 20);
-		}
-		
-  }
+//			// 软件将标志位清零
+//			hdma_usart2_rx.State = HAL_DMA_STATE_BUSY;
+//			// 继续继续下一回合的DMA接收，因为采用的非循环模式，再次调用会再次使能DMA
+//			HAL_UART_Receive_DMA(&huart2, (uint8_t *)recvStr2, 20);
+//		}
   }
   /* USER CODE END 3 */
 }
@@ -175,11 +197,11 @@ void SystemClock_Config(void)
   */
   RCC_OscInitStruct.OscillatorType = RCC_OSCILLATORTYPE_HSE;
   RCC_OscInitStruct.HSEState = RCC_HSE_ON;
-  RCC_OscInitStruct.HSEPredivValue = RCC_HSE_PREDIV_DIV2;
+  RCC_OscInitStruct.HSEPredivValue = RCC_HSE_PREDIV_DIV1;
   RCC_OscInitStruct.HSIState = RCC_HSI_ON;
   RCC_OscInitStruct.PLL.PLLState = RCC_PLL_ON;
   RCC_OscInitStruct.PLL.PLLSource = RCC_PLLSOURCE_HSE;
-  RCC_OscInitStruct.PLL.PLLMUL = RCC_PLL_MUL16;
+  RCC_OscInitStruct.PLL.PLLMUL = RCC_PLL_MUL9;
   if (HAL_RCC_OscConfig(&RCC_OscInitStruct) != HAL_OK)
   {
     Error_Handler();
@@ -198,7 +220,7 @@ void SystemClock_Config(void)
     Error_Handler();
   }
   PeriphClkInit.PeriphClockSelection = RCC_PERIPHCLK_ADC;
-  PeriphClkInit.AdcClockSelection = RCC_ADCPCLK2_DIV8;
+  PeriphClkInit.AdcClockSelection = RCC_ADCPCLK2_DIV6;
   if (HAL_RCCEx_PeriphCLKConfig(&PeriphClkInit) != HAL_OK)
   {
     Error_Handler();

@@ -264,7 +264,19 @@ void DMA1_Channel7_IRQHandler(void)
 void USART1_IRQHandler(void)
 {
   /* USER CODE BEGIN USART1_IRQn 0 */
-
+//	if(__HAL_UART_GET_FLAG(&huart1, UART_FLAG_IDLE) != RESET)
+//  {
+//    __HAL_UART_CLEAR_IDLEFLAG(&huart1);
+//    static uint8_t recv1[20] = {0x00};
+//		uint8_t head1[] = "\r\nrecv: ";
+//		uint8_t end1[] = " .\r\n";
+////		HAL_UART_Transmit_DMA(&huart1, head1, sizeof(head1) - 1); 
+//		HAL_UART_Transmit_DMA(&huart1, recv1, sizeof(recv1) - 1); 
+////		HAL_UART_Transmit_DMA(&huart1, end1, sizeof(end1) - 1); 
+//		memset(recv1, 0x00, sizeof(recv1));
+//		HAL_UART_Receive_DMA(&huart1, recv1, 20); 
+//		
+//  }
   /* USER CODE END USART1_IRQn 0 */
   HAL_UART_IRQHandler(&huart1);
   /* USER CODE BEGIN USART1_IRQn 1 */
@@ -278,7 +290,20 @@ void USART1_IRQHandler(void)
 void USART2_IRQHandler(void)
 {
   /* USER CODE BEGIN USART2_IRQn 0 */
-
+	if(__HAL_UART_GET_FLAG(&huart2, UART_FLAG_IDLE) != RESET)
+  {
+    __HAL_UART_CLEAR_IDLEFLAG(&huart2);
+    static uint8_t recv[21] = {0x00};
+		printf("\r\nuart2recv: %s", recv);
+//		uint8_t head[] = "\r\nrecv: ";
+//		uint8_t end[] = " .\r\n";
+//		HAL_UART_Transmit_DMA(&huart1, head, sizeof(head) - 1); 
+//		HAL_UART_Transmit_DMA(&huart1, recv, sizeof(recv) - 1); 
+//		HAL_UART_Transmit_DMA(&huart1, end, sizeof(end) - 1); 
+//		memset(recv, 0x00, sizeof(recv));
+		HAL_UART_Receive_DMA(&huart2, recv, 21); 
+		
+  }
   /* USER CODE END USART2_IRQn 0 */
   HAL_UART_IRQHandler(&huart2);
   /* USER CODE BEGIN USART2_IRQn 1 */
