@@ -59,7 +59,20 @@ void Error_Handler(void);
 
 /* Private defines -----------------------------------------------------------*/
 /* USER CODE BEGIN Private defines */
-
+extern uint8_t uart2recv[21];
+#define BT_RECV_MAX_LEN 52//4
+#define BT_ONE_FRAME_MAX_LEN 25//6			//一次处理缓存最大空间
+typedef struct BT_USARTx_Data //串口数据帧的处理结构体
+{
+	uint8_t bBTUARTWork;
+	uint8_t RxData[BT_RECV_MAX_LEN];
+	uint16_t iRxDataMaxLen;
+	uint16_t iFreeSpaceDataNum;
+	uint16_t iLastDataNum;
+	uint16_t ihigh;
+	uint16_t ilow;
+} BTDataInfo;
+void BTUartIrqHandle(void);
 /* USER CODE END Private defines */
 
 #ifdef __cplusplus
